@@ -1,0 +1,37 @@
+{
+  "name": "bookmarker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Multi-user bookmark management application",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "build": "npm run build --prefix frontend && npm run build --prefix backend",
+    "test": "npm run test --prefix frontend && npm run test --prefix backend",
+    "test:e2e": "playwright test",
+    "lint": "npm run lint --prefix frontend && npm run lint --prefix backend",
+    "lint:fix": "npm run lint:fix --prefix frontend && npm run lint:fix --prefix backend",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "concurrently": "^8.2.2",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.2.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}
