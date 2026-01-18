@@ -14,6 +14,8 @@ RUN npm ci && \
 
 # ソースコードのコピーとビルド
 COPY . .
+# Generate Prisma client first (requires devDependencies)
+RUN npx prisma generate
 RUN npm run build
 
 # プロダクションステージ
@@ -32,6 +34,9 @@ RUN npm ci --only=production && npm cache clean --force
 # ビルド成果物のコピー
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
+# Copy generated Prisma client from builder (schema-specific)
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 
 # データディレクトリの作成（SQLite用）
 RUN mkdir -p /app/data && \

@@ -20,6 +20,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Ensure public dir exists so production stage COPY won't fail when repository has no public/
+RUN mkdir -p public
+
 # Next.js のビルド
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
@@ -36,10 +39,12 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# 必要なファイルのみコピー
-COPY --from=builder /app/public ./public
+# 必要なファイルのみコピー（public が無くても失敗しないようにする）
+RUN mkdir -p public || true
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# If builder produced a public directory, copy it; avoid failing when absent
+RUN if [ -d /app/public ]; then cp -r /app/public ./public; fi
 
 # ヘルスチェック
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
