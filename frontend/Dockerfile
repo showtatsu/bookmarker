@@ -39,12 +39,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# 必要なファイルのみコピー（public が無くても失敗しないようにする）
-RUN mkdir -p public || true
+# 必要なファイルのみコピー（builder で public を作成済み）
+COPY --from=builder --chown=nextjs:nodejs /app/public/ ./public/
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-# If builder produced a public directory, copy it; avoid failing when absent
-RUN if [ -d /app/public ]; then cp -r /app/public ./public; fi
 
 # ヘルスチェック
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
