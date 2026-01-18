@@ -1,0 +1,11 @@
+name,isFavorite
+dev,true
+frontend,true
+backend,true
+docs,false
+personal,false
+work,true
+git,false
+database,false
+react,false
+css,false

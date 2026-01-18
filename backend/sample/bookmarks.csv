@@ -1,0 +1,6 @@
+path,title,description,isFavorite,tags,createdAt
+https://github.com,GitHub,ソースコード管理プラットフォーム,true,"dev,git",2026-01-01T00:00:00.000Z
+https://nextjs.org,Next.js,Reactフレームワーク,true,"dev,frontend,react",2026-01-02T00:00:00.000Z
+https://prisma.io,Prisma,次世代ORM,false,"dev,database",2026-01-03T00:00:00.000Z
+/Users/docs/readme.md,README,プロジェクト説明書,false,"docs",2026-01-04T00:00:00.000Z
+https://tailwindcss.com,Tailwind CSS,ユーティリティファーストCSS,false,"dev,frontend,css",2026-01-05T00:00:00.000Z
