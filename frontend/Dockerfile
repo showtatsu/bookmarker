@@ -41,7 +41,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 # 必要なファイルのみコピー（builder で public を作成済み）
 COPY --from=builder --chown=nextjs:nodejs /app/public/ ./public/
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./.next/standalone
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # ヘルスチェック
@@ -52,4 +52,4 @@ USER nextjs
 
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+CMD ["node", ".next/standalone/server.js"]
