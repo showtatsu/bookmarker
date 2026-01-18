@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - ..:/workspace:cached
+      - node_modules_frontend:/workspace/frontend/node_modules
+      - node_modules_backend:/workspace/backend/node_modules
+    environment:
+      - NODE_ENV=development
+      - DATABASE_PROVIDER=sqlite
+      - DATABASE_URL=file:/workspace/data/bookmarker.dev.db
+      - JWT_SECRET=dev-secret-key-do-not-use-in-production
+      - JWT_REFRESH_SECRET=dev-refresh-secret-key-do-not-use-in-production
+      - CORS_ORIGIN=http://localhost:3000
+    ports:
+      - "3000:3000"
+      - "4000:4000"
+    command: sleep infinity
+
+volumes:
+  node_modules_frontend:
+  node_modules_backend:
