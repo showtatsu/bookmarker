@@ -9,7 +9,7 @@ WORKDIR /app
 
 # 依存関係のインストール（キャッシュ最適化）
 COPY package*.json ./
-RUN npm ci --only=production && \
+RUN npm ci && \
     npm cache clean --force
 
 # ソースコードのコピーとビルド
@@ -25,10 +25,12 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-# 必要なファイルのみコピー
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
+# package.json を先にコピーして production 依存関係のみインストール
 COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
+RUN npm ci --only=production && npm cache clean --force
+
+# ビルド成果物のコピー
+COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
 
 # データディレクトリの作成（SQLite用）
