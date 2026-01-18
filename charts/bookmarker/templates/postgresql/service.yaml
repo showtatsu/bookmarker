@@ -1,0 +1,17 @@
+{{- if .Values.postgresql.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bookmarker.postgresql.serviceName" . }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "bookmarker.postgresql.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "bookmarker.postgresql.selectorLabels" . | nindent 4 }}
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+  clusterIP: None
+{{- end }}

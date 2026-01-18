@@ -1,0 +1,84 @@
+{{- if .Values.backend.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bookmarker.backend.name" . }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "bookmarker.backend.labels" . | nindent 4 }}
+  {{- with .Values.backend.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if not .Values.backend.autoscaling.enabled }}
+  replicas: {{ .Values.backend.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "bookmarker.backend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "bookmarker.backend.selectorLabels" . | nindent 8 }}
+      {{- with .Values.backend.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: busybox:latest
+        command: ['sh', '-c', 'until nc -z {{ include "bookmarker.postgresql.serviceName" . }} 5432; do echo waiting for postgres; sleep 2; done']
+      containers:
+      - name: backend
+        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+        imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.backend.service.targetPort }}
+          name: http
+        env:
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "bookmarker.fullname" . }}-config
+              key: NODE_ENV
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "bookmarker.fullname" . }}-config
+              key: PORT
+        - name: DATABASE_PROVIDER
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "bookmarker.fullname" . }}-config
+              key: DATABASE_PROVIDER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "bookmarker.fullname" . }}-secrets
+              key: DB_PASSWORD
+        - name: DATABASE_URL
+          value: {{ include "bookmarker.databaseUrl" . | quote }}
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "bookmarker.fullname" . }}-secrets
+              key: JWT_SECRET
+        - name: JWT_EXPIRES_IN
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "bookmarker.fullname" . }}-config
+              key: JWT_EXPIRES_IN
+        - name: REFRESH_TOKEN_EXPIRES_IN
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "bookmarker.fullname" . }}-config
+              key: REFRESH_TOKEN_EXPIRES_IN
+        livenessProbe:
+          {{- toYaml .Values.backend.livenessProbe | nindent 10 }}
+        readinessProbe:
+          {{- toYaml .Values.backend.readinessProbe | nindent 10 }}
+        resources:
+          {{- toYaml .Values.backend.resources | nindent 10 }}
+{{- end }}

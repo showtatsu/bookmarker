@@ -1,0 +1,17 @@
+{{- if .Values.backend.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bookmarker.backend.serviceName" . }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "bookmarker.backend.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.backend.service.type }}
+  selector:
+    {{- include "bookmarker.backend.selectorLabels" . | nindent 4 }}
+  ports:
+  - port: {{ .Values.backend.service.port }}
+    targetPort: {{ .Values.backend.service.targetPort }}
+    protocol: TCP
+{{- end }}

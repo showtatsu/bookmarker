@@ -1,0 +1,64 @@
+{{- if .Values.postgresql.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "bookmarker.postgresql.name" . }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "bookmarker.postgresql.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "bookmarker.postgresql.serviceName" . }}
+  replicas: {{ .Values.postgresql.replicas }}
+  selector:
+    matchLabels:
+      {{- include "bookmarker.postgresql.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "bookmarker.postgresql.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: postgres
+        image: "{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}"
+        imagePullPolicy: {{ .Values.postgresql.image.pullPolicy }}
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_USER
+          value: {{ .Values.postgresql.username | quote }}
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "bookmarker.fullname" . }}-secrets
+              key: DB_PASSWORD
+        - name: POSTGRES_DB
+          value: {{ .Values.postgresql.database | quote }}
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - {{ .Values.postgresql.username }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - {{ .Values.postgresql.username }}
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          {{- toYaml .Values.postgresql.resources | nindent 10 }}
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: {{ include "bookmarker.postgresql.pvcName" . }}
+{{- end }}

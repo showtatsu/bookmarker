@@ -1,0 +1,17 @@
+{{- if .Values.frontend.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bookmarker.frontend.serviceName" . }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "bookmarker.frontend.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.frontend.service.type }}
+  selector:
+    {{- include "bookmarker.frontend.selectorLabels" . | nindent 4 }}
+  ports:
+  - port: {{ .Values.frontend.service.port }}
+    targetPort: {{ .Values.frontend.service.targetPort }}
+    protocol: TCP
+{{- end }}

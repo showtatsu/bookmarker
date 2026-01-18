@@ -1,0 +1,13 @@
+apiVersion: v2
+name: bookmarker
+description: A Helm chart for Bookmarker application - Multi-user bookmark management with URL and file path support
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - bookmarker
+  - bookmark-manager
+  - kubernetes
+home: https://github.com/optage-tech/bookmarker
+sources:
+  - https://github.com/optage-tech/bookmarker

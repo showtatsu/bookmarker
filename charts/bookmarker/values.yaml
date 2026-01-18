@@ -1,0 +1,197 @@
+# Default values for bookmarker.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Global settings
+global:
+  namespace: bookmarker
+
+# Component name prefix (to avoid naming conflicts)
+namePrefix: bookmarker-
+
+# Application configuration
+config:
+  nodeEnv: production
+  databaseProvider: postgresql
+  port: 4000
+  jwtExpiresIn: 15m
+  refreshTokenExpiresIn: 7d
+  nextTelemetryDisabled: "1"
+  # For frontend to access backend (internal service name)
+  apiUrl: http://backend-service:4000
+
+# Secrets (these should be overridden in production)
+secrets:
+  # Generate with: openssl rand -base64 32
+  jwtSecret: ""
+  # PostgreSQL password
+  dbPassword: ""
+  # OIDC settings (optional)
+  oidcClientSecret: ""
+
+# PostgreSQL configuration
+postgresql:
+  enabled: true
+  image:
+    repository: postgres
+    tag: 16-alpine
+    pullPolicy: IfNotPresent
+
+  # StatefulSet configuration
+  replicas: 1
+
+  # Database settings
+  database: bookmarker
+  username: bookmarker
+
+  # Persistence
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 10Gi
+
+  # Resource limits
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 250m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+
+# Backend configuration
+backend:
+  enabled: true
+
+  image:
+    repository: bookmarker-backend
+    tag: latest
+    pullPolicy: Always
+
+  # Deployment settings
+  replicaCount: 2
+
+  # Custom annotations for deployment
+  annotations: {}
+
+  service:
+    type: ClusterIP
+    port: 4000
+    targetPort: 4000
+
+  # Autoscaling
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  # Resource limits
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 250m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+
+  # Health checks
+  livenessProbe:
+    httpGet:
+      path: /api/health
+      port: 4000
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 3
+
+  readinessProbe:
+    httpGet:
+      path: /api/health
+      port: 4000
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+
+# Frontend configuration
+frontend:
+  enabled: true
+
+  image:
+    repository: bookmarker-frontend
+    tag: latest
+    pullPolicy: Always
+
+  # Deployment settings
+  replicaCount: 2
+
+  # Custom annotations for deployment
+  annotations: {}
+
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+
+  # Autoscaling
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  # Resource limits
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 250m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+
+  # Health checks
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 3000
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 3
+
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 3000
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "bookmarker-affinity"
+    # Uncomment for SSL/TLS with cert-manager
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+
+  hosts:
+    - host: bookmarker.example.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          backend: backend
+        - path: /
+          pathType: Prefix
+          backend: frontend
+
+  tls:
+    - secretName: bookmarker-tls
+      hosts:
+        - bookmarker.example.com
