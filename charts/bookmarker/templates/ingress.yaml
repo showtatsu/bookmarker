@@ -1,4 +1,5 @@
 {{- if .Values.ingress.enabled }}
+{{- $root := . -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -27,18 +28,26 @@ spec:
     - host: {{ .host | quote }}
       http:
         paths:
-          {{- range .paths }}
-          - path: {{ .path }}
-            pathType: {{ .pathType }}
+          - path: /api
+            pathType: Prefix
             backend:
               service:
-                name: {{ .backend }}-service
+                name: {{ include "bookmarker.backend.serviceName" $root }}
                 port:
-                  {{- if eq .backend "backend" }}
-                  number: {{ $.Values.backend.service.port }}
-                  {{- else }}
-                  number: {{ $.Values.frontend.service.port }}
-                  {{- end }}
-          {{- end }}
+                  number: {{ $root.Values.backend.service.port }}
+          - path: /_next
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "bookmarker.frontend.serviceName" $root }}
+                port:
+                  number: {{ $root.Values.frontend.service.port }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "bookmarker.frontend.serviceName" $root }}
+                port:
+                  number: {{ $root.Values.frontend.service.port }}
     {{- end }}
 {{- end }}

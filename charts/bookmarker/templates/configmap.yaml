@@ -1,15 +1,16 @@
+{{- $root := . -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "bookmarker.fullname" . }}-config
-  namespace: {{ .Values.global.namespace }}
+  name: {{ include "bookmarker.fullname" $root }}-config
+  namespace: {{ $root.Values.global.namespace }}
   labels:
-    {{- include "bookmarker.labels" . | nindent 4 }}
+    {{- include "bookmarker.labels" $root | nindent 4 }}
 data:
-  NODE_ENV: {{ .Values.config.nodeEnv | quote }}
-  DATABASE_PROVIDER: {{ .Values.config.databaseProvider | quote }}
-  PORT: {{ .Values.config.port | quote }}
-  JWT_EXPIRES_IN: {{ .Values.config.jwtExpiresIn | quote }}
-  REFRESH_TOKEN_EXPIRES_IN: {{ .Values.config.refreshTokenExpiresIn | quote }}
-  NEXT_TELEMETRY_DISABLED: {{ .Values.config.nextTelemetryDisabled | quote }}
-  NEXT_PUBLIC_API_URL: http://{{ include "bookmarker.backend.serviceName" . }}:{{ .Values.backend.service.port }}
+  NODE_ENV: {{ $root.Values.config.nodeEnv | quote }}
+  DATABASE_PROVIDER: {{ $root.Values.config.databaseProvider | quote }}
+  PORT: {{ $root.Values.config.port | quote }}
+  JWT_EXPIRES_IN: {{ $root.Values.config.jwtExpiresIn | quote }}
+  REFRESH_TOKEN_EXPIRES_IN: {{ $root.Values.config.refreshTokenExpiresIn | quote }}
+  NEXT_TELEMETRY_DISABLED: {{ $root.Values.config.nextTelemetryDisabled | quote }}
+  NEXT_PUBLIC_API_URL: http://{{ include "bookmarker.backend.serviceName" $root }}:{{ $root.Values.backend.service.port }}

@@ -6,6 +6,11 @@
 global:
   namespace: bookmarker
 
+# If true, the chart will attempt to create the namespace specified by
+# `global.namespace`. Disable when installing into an existing namespace
+# that is not managed by Helm to avoid ownership/label validation errors.
+createNamespace: false
+
 # Component name prefix (to avoid naming conflicts)
 namePrefix: bookmarker-
 
@@ -174,7 +179,11 @@ ingress:
   className: nginx
 
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    # Avoid using a global rewrite-target of `/` — it rewrites requests
+    # for `/_next/*` (Next.js static assets) to `/` which causes 404s.
+    # If you need path rewriting for a prefix, use a scoped regex rewrite
+    # only for that path and ensure `/_next` and other static prefixes
+    # are excluded.
     nginx.ingress.kubernetes.io/limit-rps: "100"
     nginx.ingress.kubernetes.io/affinity: "cookie"
     nginx.ingress.kubernetes.io/session-cookie-name: "bookmarker-affinity"
