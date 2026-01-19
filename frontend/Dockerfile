@@ -27,6 +27,13 @@ RUN mkdir -p public
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
+# Normalize standalone/static output: some Next versions place static files under
+# `.next/standalone/app/.next/static`. Copy them into the standard `.next/static`
+# location so the production image always contains `./.next/static`.
+RUN if [ -d ".next/standalone/app/.next/static" ]; then \
+            mkdir -p .next/static && cp -a .next/standalone/app/.next/static/. .next/static/ ; \
+        fi
+
 # プロダクションステージ
 FROM node:24-alpine AS production
 
@@ -40,9 +47,9 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # 必要なファイルのみコピー（builder で public を作成済み）
-COPY --from=builder --chown=nextjs:nodejs /app/public/ ./public/
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./.next/standalone
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public/ ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static/ ./.next/static/
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone/app/ ./
 
 # ヘルスチェック
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
@@ -52,4 +59,4 @@ USER nextjs
 
 EXPOSE 3000
 
-CMD ["node", ".next/standalone/app/server.js"]
+CMD ["node", "server.js"]
