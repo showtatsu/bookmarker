@@ -70,7 +70,7 @@ backend:
   enabled: true
 
   image:
-    repository: bookmarker-backend
+    repository: ghcr.io/showtatsu/bookmarker/backend
     tag: latest
     pullPolicy: Always
 
@@ -124,7 +124,7 @@ frontend:
   enabled: true
 
   image:
-    repository: bookmarker-frontend
+    repository: ghcr.io/showtatsu/bookmarker/frontend
     tag: latest
     pullPolicy: Always
 
@@ -185,8 +185,8 @@ ingress:
     # only for that path and ensure `/_next` and other static prefixes
     # are excluded.
     nginx.ingress.kubernetes.io/limit-rps: "100"
-    nginx.ingress.kubernetes.io/affinity: "cookie"
-    nginx.ingress.kubernetes.io/session-cookie-name: "bookmarker-affinity"
+    # nginx.ingress.kubernetes.io/affinity: "cookie"
+    # nginx.ingress.kubernetes.io/session-cookie-name: "bookmarker-affinity"
     # Uncomment for SSL/TLS with cert-manager
     # cert-manager.io/cluster-issuer: "letsencrypt-prod"
 
@@ -196,6 +196,9 @@ ingress:
         - path: /api
           pathType: Prefix
           backend: backend
+        - path: /_next
+          pathType: Prefix
+          backend: frontend
         - path: /
           pathType: Prefix
           backend: frontend
