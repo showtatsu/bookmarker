@@ -58,6 +58,8 @@ export default function BookmarksPage() {
   });
   const [quickAddTagInput, setQuickAddTagInput] = useState('');
   const [isQuickAddSaving, setIsQuickAddSaving] = useState(false);
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
 
   const fetchBookmarks = useCallback(async () => {
     try {
@@ -92,6 +94,16 @@ export default function BookmarksPage() {
     }
   }, []);
 
+  const fetchAllTags = useCallback(async () => {
+    try {
+      // 全タグを取得（インクリメンタルサーチ用）
+      const response = await api.getTags();
+      setAllTags(response.data);
+    } catch {
+      console.error('全タグの取得に失敗しました');
+    }
+  }, []);
+
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       router.push('/login');
@@ -113,8 +125,9 @@ export default function BookmarksPage() {
     if (isAuthenticated) {
       fetchBookmarks();
       fetchTags();
+      fetchAllTags();
     }
-  }, [isAuthenticated, fetchBookmarks, fetchTags]);
+  }, [isAuthenticated, fetchBookmarks, fetchTags, fetchAllTags]);
 
   // 検索のデバウンス
   useEffect(() => {
@@ -221,8 +234,26 @@ export default function BookmarksPage() {
         setQuickAddData((prev) => ({ ...prev, tags: [...prev.tags, tag] }));
       }
       setQuickAddTagInput('');
+      setShowTagSuggestions(false);
+    } else if (e.key === 'Escape') {
+      setShowTagSuggestions(false);
     }
   };
+
+  const handleQuickAddSelectTag = (tagName: string) => {
+    if (!quickAddData.tags.includes(tagName)) {
+      setQuickAddData((prev) => ({ ...prev, tags: [...prev.tags, tagName] }));
+    }
+    setQuickAddTagInput('');
+    setShowTagSuggestions(false);
+  };
+
+  // インクリメンタルサーチ用のフィルタリング
+  const filteredTagSuggestions = allTags.filter(
+    (tag) =>
+      !quickAddData.tags.includes(tag.name) &&
+      tag.name.toLowerCase().includes(quickAddTagInput.toLowerCase())
+  );
 
   const handleQuickAddRemoveTag = (tagToRemove: string) => {
     setQuickAddData((prev) => ({
@@ -521,7 +552,7 @@ export default function BookmarksPage() {
               </div>
 
               {/* タグ */}
-              <div className="lg:col-span-1">
+              <div className="lg:col-span-1 relative">
                 <label className="block text-xs font-medium text-gray-500 mb-1">
                   タグ
                 </label>
@@ -544,12 +575,49 @@ export default function BookmarksPage() {
                   <input
                     type="text"
                     value={quickAddTagInput}
-                    onChange={(e) => setQuickAddTagInput(e.target.value)}
+                    onChange={(e) => {
+                      setQuickAddTagInput(e.target.value);
+                      setShowTagSuggestions(true);
+                    }}
+                    onFocus={() => setShowTagSuggestions(true)}
+                    onBlur={() => {
+                      // 少し遅延させてクリックイベントを処理できるようにする
+                      setTimeout(() => setShowTagSuggestions(false), 200);
+                    }}
                     onKeyDown={handleQuickAddTagKeyDown}
                     placeholder={quickAddData.tags.length === 0 ? 'タグを入力' : ''}
                     className="flex-1 min-w-[60px] text-sm outline-none text-gray-900"
                   />
                 </div>
+                {/* タグ候補ドロップダウン */}
+                {showTagSuggestions && (quickAddTagInput || filteredTagSuggestions.length > 0) && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    {filteredTagSuggestions.length > 0 ? (
+                      <>
+                        {filteredTagSuggestions.slice(0, 10).map((tag) => (
+                          <button
+                            key={tag.id}
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => handleQuickAddSelectTag(tag.name)}
+                            className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition"
+                          >
+                            {tag.name}
+                          </button>
+                        ))}
+                      </>
+                    ) : quickAddTagInput.trim() ? (
+                      <button
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => handleQuickAddSelectTag(quickAddTagInput.trim())}
+                        className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition"
+                      >
+                        「{quickAddTagInput.trim()}」を新規タグとして追加
+                      </button>
+                    ) : null}
+                  </div>
+                )}
               </div>
 
               {/* お気に入り */}
@@ -611,7 +679,7 @@ export default function BookmarksPage() {
       {isModalOpen && (
         <BookmarkModal
           bookmark={editingBookmark}
-          tags={tags}
+          tags={allTags}
           onClose={() => {
             setIsModalOpen(false);
             setEditingBookmark(null);

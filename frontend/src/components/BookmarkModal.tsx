@@ -1,7 +1,7 @@
 'use client';
 
 import type { Bookmark, Tag } from '@/lib/api';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 interface BookmarkModalProps {
   bookmark: Bookmark | null;
@@ -25,6 +25,16 @@ export function BookmarkModal({ bookmark, tags, onClose, onSave }: BookmarkModal
   const [newTag, setNewTag] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
+
+  // インクリメンタルサーチ用のフィルタリング
+  const filteredTagSuggestions = useMemo(() => {
+    return tags.filter(
+      (tag) =>
+        !selectedTags.includes(tag.name) &&
+        tag.name.toLowerCase().includes(newTag.toLowerCase())
+    );
+  }, [tags, selectedTags, newTag]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,6 +73,15 @@ export function BookmarkModal({ bookmark, tags, onClose, onSave }: BookmarkModal
       setSelectedTags([...selectedTags, trimmed]);
     }
     setNewTag('');
+    setShowTagSuggestions(false);
+  };
+
+  const selectTag = (tagName: string) => {
+    if (!selectedTags.includes(tagName)) {
+      setSelectedTags([...selectedTags, tagName]);
+    }
+    setNewTag('');
+    setShowTagSuggestions(false);
   };
 
   const removeTag = (tag: string) => {
@@ -134,27 +153,68 @@ export function BookmarkModal({ bookmark, tags, onClose, onSave }: BookmarkModal
             <label className="block text-sm font-medium text-gray-700 mb-1">
               タグ
             </label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addTag();
-                  }
-                }}
-                placeholder="タグを追加"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900"
-              />
-              <button
-                type="button"
-                onClick={addTag}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
-              >
-                +
-              </button>
+            <div className="relative">
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={newTag}
+                  onChange={(e) => {
+                    setNewTag(e.target.value);
+                    setShowTagSuggestions(true);
+                  }}
+                  onFocus={() => setShowTagSuggestions(true)}
+                  onBlur={() => {
+                    setTimeout(() => setShowTagSuggestions(false), 200);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addTag();
+                    } else if (e.key === 'Escape') {
+                      setShowTagSuggestions(false);
+                    }
+                  }}
+                  placeholder="タグを追加"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900"
+                />
+                <button
+                  type="button"
+                  onClick={addTag}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                >
+                  +
+                </button>
+              </div>
+
+              {/* タグ候補ドロップダウン */}
+              {showTagSuggestions && (newTag || filteredTagSuggestions.length > 0) && (
+                <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  {filteredTagSuggestions.length > 0 ? (
+                    <>
+                      {filteredTagSuggestions.slice(0, 10).map((tag) => (
+                        <button
+                          key={tag.id}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => selectTag(tag.name)}
+                          className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition"
+                        >
+                          {tag.name}
+                        </button>
+                      ))}
+                    </>
+                  ) : newTag.trim() ? (
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => selectTag(newTag.trim())}
+                      className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition"
+                    >
+                      「{newTag.trim()}」を新規タグとして追加
+                    </button>
+                  ) : null}
+                </div>
+              )}
             </div>
 
             {/* Selected tags */}
