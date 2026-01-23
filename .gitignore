@@ -1,4 +1,7 @@
 backend/export/*
+values.production.yaml
+values.staging.yaml
+values.develop.yaml
 
 # Kubernetes secrets (never commit!)
 k8s/secrets.yaml
