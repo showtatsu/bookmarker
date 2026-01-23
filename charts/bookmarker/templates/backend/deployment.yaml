@@ -65,6 +65,13 @@ spec:
             secretKeyRef:
               name: {{ include "bookmarker.fullname" . }}-secrets
               key: JWT_SECRET
+        {{- if .Values.secrets.jwtRefreshSecret }}
+        - name: JWT_REFRESH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "bookmarker.fullname" . }}-secrets
+              key: JWT_REFRESH_SECRET
+        {{- end }}
         - name: JWT_EXPIRES_IN
           valueFrom:
             configMapKeyRef:
@@ -75,6 +82,13 @@ spec:
             configMapKeyRef:
               name: {{ include "bookmarker.fullname" . }}-config
               key: REFRESH_TOKEN_EXPIRES_IN
+        {{- if .Values.config.corsOrigin }}
+        - name: CORS_ORIGIN
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "bookmarker.fullname" . }}-config
+              key: CORS_ORIGIN
+        {{- end }}
         livenessProbe:
           {{- toYaml .Values.backend.livenessProbe | nindent 10 }}
         readinessProbe:

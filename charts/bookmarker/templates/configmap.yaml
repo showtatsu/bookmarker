@@ -13,4 +13,6 @@ data:
   JWT_EXPIRES_IN: {{ $root.Values.config.jwtExpiresIn | quote }}
   REFRESH_TOKEN_EXPIRES_IN: {{ $root.Values.config.refreshTokenExpiresIn | quote }}
   NEXT_TELEMETRY_DISABLED: {{ $root.Values.config.nextTelemetryDisabled | quote }}
-  NEXT_PUBLIC_API_URL: http://{{ include "bookmarker.backend.serviceName" $root }}:{{ $root.Values.backend.service.port }}
+  {{- if $root.Values.config.corsOrigin }}
+  CORS_ORIGIN: {{ $root.Values.config.corsOrigin | quote }}
+  {{- end }}

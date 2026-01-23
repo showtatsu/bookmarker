@@ -22,6 +22,9 @@ config:
   jwtExpiresIn: 15m
   refreshTokenExpiresIn: 7d
   nextTelemetryDisabled: "1"
+  # CORS origin for frontend (important for cookie-based auth with multiple replicas)
+  # Set this to your actual frontend domain in production
+  corsOrigin: ""
   # For frontend to access backend (internal service name)
   apiUrl: http://backend-service:4000
 
@@ -29,6 +32,9 @@ config:
 secrets:
   # Generate with: openssl rand -base64 32
   jwtSecret: ""
+  # JWT Refresh Token Secret (generate with: openssl rand -base64 32)
+  # Important: Must be the same across all backend replicas
+  jwtRefreshSecret: ""
   # PostgreSQL password
   dbPassword: ""
   # OIDC settings (optional)

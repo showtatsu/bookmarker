@@ -293,8 +293,6 @@ services:
     build: ./frontend
     ports:
       - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://backend:4000
     depends_on:
       - backend
 
@@ -325,8 +323,6 @@ services:
     build: ./frontend
     ports:
       - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://backend:4000
     depends_on:
       - backend
 
@@ -634,8 +630,6 @@ services:
 
   frontend:
     build: ./frontend
-    environment:
-      - NEXT_PUBLIC_API_URL=http://nginx/api
     expose:
       - "3000"
 

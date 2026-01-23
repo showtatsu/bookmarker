@@ -44,11 +44,6 @@ spec:
             configMapKeyRef:
               name: {{ include "bookmarker.fullname" . }}-config
               key: NEXT_TELEMETRY_DISABLED
-        - name: NEXT_PUBLIC_API_URL
-          valueFrom:
-            configMapKeyRef:
-              name: {{ include "bookmarker.fullname" . }}-config
-              key: NEXT_PUBLIC_API_URL
         livenessProbe:
           {{- toYaml .Values.frontend.livenessProbe | nindent 10 }}
         readinessProbe:

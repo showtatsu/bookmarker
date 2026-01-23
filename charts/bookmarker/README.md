@@ -14,12 +14,15 @@ Helmチャートを使用してKubernetesクラスタにBookmarkerアプリケ�
 
 ```bash
 # Secretsは必ず設定してください
+# corsOriginは複数レプリカ使用時に必須です
 helm install bookmarker ./charts/bookmarker \
   --namespace bookmarker \
   --create-namespace \
   --values ./charts/bookmarker/values.yaml \
   --set secrets.jwtSecret="your-jwt-secret-key-here" \
-  --set secrets.dbPassword="your-db-password-here"
+  --set secrets.jwtRefreshSecret="your-jwt-refresh-secret-here" \
+  --set secrets.dbPassword="your-db-password-here" \
+  --set config.corsOrigin="https://your-domain.com"
 ```
 
 ### カスタム設定でのデプロイ
@@ -60,7 +63,11 @@ kubectl delete namespace bookmarker
 | パラメータ | 説明 | デフォルト値 |
 |-----------|------|------------|
 | `secrets.jwtSecret` | JWT署名用シークレット（最低32文字） | `""` |
+| `secrets.jwtRefreshSecret` | JWTリフレッシュトークン署名用シークレット | `""` |
 | `secrets.dbPassword` | PostgreSQLパスワード | `""` |
+| `config.corsOrigin` | フロントエンドのオリジン（複数レプリカ時に必須） | `""` |
+
+> **重要**: 複数のバックエンドレプリカを使用する場合、`corsOrigin`を正しく設定しないとCookie認証が失敗し、401エラーが発生します。
 
 ### アプリケーション設定
 
