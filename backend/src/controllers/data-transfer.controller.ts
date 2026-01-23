@@ -52,7 +52,9 @@ function parseCSVLine(line: string): string[] {
 }
 
 function parseCSV(content: string): Record<string, string>[] {
-  const lines = content.trim().split('\n');
+  // Windows改行コード(\r\n)をUnix改行コード(\n)に正規化
+  const normalizedContent = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const lines = normalizedContent.trim().split('\n');
   if (lines.length < 2) return [];
 
   const headers = parseCSVLine(lines[0]);
