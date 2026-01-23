@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 # ===================================
 # Frontend Production Dockerfile
 # ===================================
@@ -10,7 +11,7 @@ WORKDIR /app
 
 # 依存関係のインストール（キャッシュ最適化）
 COPY package*.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci
 
 # ビルドステージ
 FROM node:24-alpine AS builder
@@ -25,7 +26,7 @@ RUN mkdir -p public
 
 # Next.js のビルド
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npm run build
+RUN --mount=type=cache,target=/app/.next/cache npm run build
 
 # Normalize standalone/static output: some Next versions place static files under
 # `.next/standalone/app/.next/static`. Copy them into the standard `.next/static`
